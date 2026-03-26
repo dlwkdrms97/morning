@@ -74,20 +74,19 @@
             });
 
             // 오디오 객체 생성
-            const clickAudio = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3'));
-            const completeAudio = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3'));
-            const successAudio = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3'));
+            const clickAudio = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3')); // Pop
+            const completeAudio = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3')); // Bell
+            const successAudio = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/1433/1433-preview.mp3')); // Fanfare/Cheer
 
             const playSound = (type) => {
-                if (type === 'click') {
-                    clickAudio.current.currentTime = 0;
-                    clickAudio.current.play().catch(e => console.log("Audio play blocked"));
-                } else if (type === 'complete') {
-                    completeAudio.current.currentTime = 0;
-                    completeAudio.current.play().catch(e => console.log("Audio play blocked"));
-                } else if (type === 'success') {
-                    successAudio.current.currentTime = 0;
-                    successAudio.current.play().catch(e => console.log("Audio play blocked"));
+                let audio;
+                if (type === 'click') audio = clickAudio.current;
+                else if (type === 'complete') audio = completeAudio.current;
+                else if (type === 'success') audio = successAudio.current;
+                
+                if (audio) {
+                    audio.currentTime = 0;
+                    audio.play().catch(e => console.log("Audio play blocked"));
                 }
             };
 
@@ -159,6 +158,7 @@
             };
 
             const resetApp = () => {
+                playSound('click');
                 setMode('');
                 setStep('select-mode');
                 setSelectedStudent('');
@@ -168,24 +168,24 @@
             };
 
             return (
-                <div className="main-container bg-white p-5 md:p-8 rounded-[3.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-[95%] max-w-4xl text-center border-[10px] border-white flex flex-col justify-center overflow-hidden ring-6 ring-sky-100">
+                <div className="main-container bg-white p-4 md:p-6 rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-[90%] max-w-3xl text-center border-[8px] border-white flex flex-col justify-center overflow-hidden ring-4 ring-sky-100">
                     {step === 'select-mode' && (
-                        <div className="py-3 w-full">
-                            <h1 className="title-text text-5xl md:text-7xl font-bold text-sky-500 mb-12 leading-tight drop-shadow-sm text-center">무엇을 도와줄까요? ✨</h1>
-                            <div className="flex flex-col md:flex-row justify-center gap-6 md:gap-10 items-stretch px-4">
+                        <div className="py-2 w-full">
+                            <h1 className="title-text text-4xl md:text-6xl font-bold text-sky-500 mb-8 leading-tight drop-shadow-sm text-center">무엇을 도와줄까요? ✨</h1>
+                            <div className="flex flex-col md:flex-row justify-center gap-4 md:gap-8 items-stretch px-4">
                                 <button 
                                     onClick={() => handleModeSelect('morning')}
-                                    className="btn-student bg-gradient-to-b from-orange-100 to-orange-200 hover:from-orange-200 hover:to-orange-300 text-orange-800 p-8 md:p-14 rounded-[3.5rem] shadow-2xl border-b-[12px] border-orange-400 w-full flex flex-col items-center justify-center transition-all"
+                                    className="btn-student bg-gradient-to-b from-orange-100 to-orange-200 hover:from-orange-200 hover:to-orange-300 text-orange-800 p-6 md:p-10 rounded-[3rem] shadow-xl border-b-[10px] border-orange-400 w-full flex flex-col items-center justify-center transition-all"
                                 >
-                                    <span className="text-6xl md:text-8xl mb-3">☀️</span>
-                                    <span className="text-4xl md:text-6xl font-bold whitespace-nowrap">아침 등교</span>
+                                    <span className="text-5xl md:text-7xl mb-2">☀️</span>
+                                    <span className="text-3xl md:text-5xl font-bold whitespace-nowrap">아침 등교</span>
                                 </button>
                                 <button 
                                     onClick={() => handleModeSelect('class')}
-                                    className="btn-student bg-gradient-to-b from-green-100 to-green-200 hover:from-green-200 hover:to-green-300 text-green-800 p-8 md:p-14 rounded-[3.5rem] shadow-2xl border-b-[12px] border-green-400 w-full flex flex-col items-center justify-center transition-all"
+                                    className="btn-student bg-gradient-to-b from-green-100 to-green-200 hover:from-green-200 hover:to-green-300 text-green-800 p-6 md:p-10 rounded-[3rem] shadow-xl border-b-[10px] border-green-400 w-full flex flex-col items-center justify-center transition-all"
                                 >
-                                    <span className="text-6xl md:text-8xl mb-3">📚</span>
-                                    <span className="text-4xl md:text-6xl font-bold whitespace-nowrap">수업 준비</span>
+                                    <span className="text-5xl md:text-7xl mb-2">📚</span>
+                                    <span className="text-3xl md:text-5xl font-bold whitespace-nowrap">수업 준비</span>
                                 </button>
                             </div>
                         </div>
@@ -193,36 +193,36 @@
 
                     {step === 'select-student' && (
                         <div className="py-2 w-full">
-                            <h1 className="title-text text-4xl md:text-6xl font-bold text-sky-500 mb-8 leading-tight drop-shadow-sm text-center px-4">
+                            <h1 className="title-text text-3xl md:text-5xl font-bold text-sky-500 mb-6 leading-tight drop-shadow-sm text-center px-4">
                                 {mode === 'morning' ? "등교한 학생은 누구인가요? ✨" : "누구의 수업 준비를 도와줄까요? 📚"}
                             </h1>
-                            <div className="grid grid-cols-2 gap-5 md:gap-8 px-4">
+                            <div className="grid grid-cols-2 gap-4 md:gap-6 px-4">
                                 {students.map(name => (
                                     <button 
                                         key={name}
                                         onClick={() => handleStudentSelect(name)}
-                                        className="btn-student bg-gradient-to-b from-yellow-100 to-yellow-200 hover:from-yellow-200 hover:to-yellow-300 text-sky-800 p-8 md:p-14 rounded-[2.5rem] shadow-xl border-b-[12px] border-yellow-400 active:border-b-0 active:translate-y-[10px] w-full flex items-center justify-center"
+                                        className="btn-student bg-gradient-to-b from-yellow-100 to-yellow-200 hover:from-yellow-200 hover:to-yellow-300 text-sky-800 p-6 md:p-10 rounded-[2.5rem] shadow-lg border-b-[10px] border-yellow-400 active:border-b-0 active:translate-y-[8px] w-full flex items-center justify-center"
                                     >
-                                        <span className="text-5xl md:text-7xl font-bold whitespace-nowrap">{name}</span>
+                                        <span className="text-4xl md:text-6xl font-bold whitespace-nowrap">{name}</span>
                                     </button>
                                 ))}
                             </div>
-                            <button onClick={resetApp} className="mt-10 text-2xl font-bold text-gray-400 hover:text-sky-500 transition-colors underline decoration-dotted whitespace-nowrap">처음으로 돌아가기</button>
+                            <button onClick={resetApp} className="mt-8 text-xl font-bold text-gray-400 hover:text-sky-500 transition-colors underline decoration-dotted whitespace-nowrap">처음으로 돌아가기</button>
                         </div>
                     )}
 
                     {step === 'select-emotion' && (
                         <div className="py-2">
-                            <h2 className="title-text text-4xl md:text-5xl font-bold text-sky-500 mb-8 leading-tight">{selectedStudent} 학생,<br/>지금 기분이 어떤가요? 🌈</h2>
-                            <div className="grid grid-cols-3 md:grid-cols-5 gap-3 md:gap-5">
+                            <h2 className="title-text text-3xl md:text-4xl font-bold text-sky-500 mb-6 leading-tight">{selectedStudent} 학생,<br/>지금 기분이 어떤가요? 🌈</h2>
+                            <div className="grid grid-cols-3 md:grid-cols-5 gap-2 md:gap-4">
                                 {emotions.map(e => (
                                     <button 
                                         key={e.value}
                                         onClick={() => handleEmotionSelect(e.value)}
-                                        className="bg-white hover:bg-sky-50 p-5 md:p-7 rounded-[2rem] border-4 border-sky-100 hover:border-sky-300 transition-all shadow-lg flex flex-col items-center justify-center group"
+                                        className="bg-white hover:bg-sky-50 p-4 md:p-5 rounded-[1.5rem] border-4 border-sky-100 hover:border-sky-300 transition-all shadow-md flex flex-col items-center justify-center group"
                                     >
-                                        <div className="text-5xl md:text-7xl mb-3 group-hover:scale-110 transition-transform">{e.emoji}</div>
-                                        <div className="text-xl md:text-2xl font-bold text-gray-500">{e.label}</div>
+                                        <div className="text-4xl md:text-6xl mb-2 group-hover:scale-110 transition-transform">{e.emoji}</div>
+                                        <div className="text-lg md:text-xl font-bold text-gray-500">{e.label}</div>
                                     </button>
                                 ))}
                             </div>
@@ -231,8 +231,8 @@
 
                     {step === 'checklist' && (
                         <div className="py-1">
-                            <h2 className="title-text text-3xl md:text-4xl font-bold text-sky-500 mb-3">아침 미션을 완료해봅시다! 📝</h2>
-                            <div className="space-y-2 md:space-y-3 mb-5 max-w-2xl mx-auto">
+                            <h2 className="title-text text-2xl md:text-3xl font-bold text-sky-500 mb-2">아침 미션을 완료해봅시다! 📝</h2>
+                            <div className="space-y-1 md:space-y-2 mb-4 max-w-2xl mx-auto">
                                 {[
                                     { id: 'item1', label: '👋 다정하게 인사하기' },
                                     { id: 'item2', label: '📱 휴대폰 제출하기' },
@@ -242,17 +242,17 @@
                                     <div 
                                         key={item.id}
                                         onClick={() => toggleCheck(item.id)}
-                                        className={`check-item p-3 md:p-4 rounded-[1.5rem] text-xl md:text-3xl font-bold cursor-pointer border-4 md:border-6 transition-all flex items-center justify-between ${checklist[item.id] ? 'bg-green-100 border-green-400 text-green-700 shadow-inner' : 'bg-gray-50 border-gray-200 text-gray-400 shadow-md'}`}
+                                        className={`check-item p-2 md:p-3 rounded-[1.2rem] text-lg md:text-2xl font-bold cursor-pointer border-2 md:border-4 transition-all flex items-center justify-between ${checklist[item.id] ? 'bg-green-100 border-green-400 text-green-700 shadow-inner' : 'bg-gray-50 border-gray-200 text-gray-400 shadow-md'}`}
                                     >
                                         <span className="whitespace-nowrap">{item.label}</span>
-                                        <span className="text-3xl md:text-5xl">{checklist[item.id] ? '✅' : '⬜'}</span>
+                                        <span className="text-2xl md:text-4xl">{checklist[item.id] ? '✅' : '⬜'}</span>
                                     </div>
                                 ))}
                             </div>
                             <button 
                                 onClick={handleSubmit}
                                 disabled={!allMorningChecked}
-                                className={`w-full max-w-md mx-auto py-3 md:py-5 rounded-[2.5rem] text-2xl md:text-4xl font-bold shadow-2xl transition-all ${allMorningChecked ? 'bg-gradient-to-r from-sky-400 to-blue-500 text-white hover:from-sky-500 hover:to-blue-600 scale-105' : 'bg-gray-300 text-white cursor-not-allowed opacity-50'}`}
+                                className={`w-full max-w-sm mx-auto py-2 md:py-4 rounded-[2rem] text-xl md:text-3xl font-bold shadow-xl transition-all ${allMorningChecked ? 'bg-gradient-to-r from-sky-400 to-blue-500 text-white hover:from-sky-500 hover:to-blue-600 scale-105' : 'bg-gray-300 text-white cursor-not-allowed opacity-50'}`}
                             >
                                 아침 미션 완료! 🚀
                             </button>
@@ -261,8 +261,8 @@
 
                     {step === 'class-checklist' && (
                         <div className="py-1">
-                            <h2 className="title-text text-3xl md:text-4xl font-bold text-green-500 mb-3">수업 준비물을 챙겨봅시다! 📚</h2>
-                            <div className="space-y-2 md:space-y-3 mb-5 max-w-2xl mx-auto">
+                            <h2 className="title-text text-2xl md:text-3xl font-bold text-green-500 mb-2">수업 준비물을 챙겨봅시다! 📚</h2>
+                            <div className="space-y-1 md:space-y-2 mb-4 max-w-2xl mx-auto">
                                 {[
                                     { id: 'book', label: '📖 이번 시간 교과서' },
                                     { id: 'note', label: '📓 오무배노트' },
@@ -272,17 +272,17 @@
                                     <div 
                                         key={item.id}
                                         onClick={() => toggleClassCheck(item.id)}
-                                        className={`check-item p-3 md:p-4 rounded-[1.5rem] text-xl md:text-3xl font-bold cursor-pointer border-4 md:border-6 transition-all flex items-center justify-between ${classChecklist[item.id] ? 'bg-green-100 border-green-400 text-green-700 shadow-inner' : 'bg-gray-50 border-gray-200 text-gray-400 shadow-md'}`}
+                                        className={`check-item p-2 md:p-3 rounded-[1.2rem] text-lg md:text-2xl font-bold cursor-pointer border-2 md:border-4 transition-all flex items-center justify-between ${classChecklist[item.id] ? 'bg-green-100 border-green-400 text-green-700 shadow-inner' : 'bg-gray-50 border-gray-200 text-gray-400 shadow-md'}`}
                                     >
                                         <span className="whitespace-nowrap">{item.label}</span>
-                                        <span className="text-3xl md:text-5xl">{classChecklist[item.id] ? '✅' : '⬜'}</span>
+                                        <span className="text-2xl md:text-4xl">{classChecklist[item.id] ? '✅' : '⬜'}</span>
                                     </div>
                                 ))}
                             </div>
                             <button 
                                 onClick={handleSubmit}
                                 disabled={!allClassChecked}
-                                className={`w-full max-w-md mx-auto py-3 md:py-5 rounded-[2.5rem] text-2xl md:text-4xl font-bold shadow-2xl transition-all ${allClassChecked ? 'bg-gradient-to-r from-green-400 to-teal-500 text-white hover:from-green-500 hover:to-teal-600 scale-105' : 'bg-gray-300 text-white cursor-not-allowed opacity-50'}`}
+                                className={`w-full max-w-sm mx-auto py-2 md:py-4 rounded-[2rem] text-xl md:text-3xl font-bold shadow-xl transition-all ${allClassChecked ? 'bg-gradient-to-r from-green-400 to-teal-500 text-white hover:from-green-500 hover:to-teal-600 scale-105' : 'bg-gray-300 text-white cursor-not-allowed opacity-50'}`}
                             >
                                 수업 준비 완료! 🚀
                             </button>
@@ -290,13 +290,13 @@
                     )}
 
                     {step === 'success' && (
-                        <div className="py-2 md:py-4 flex flex-col items-center justify-center overflow-hidden">
-                            <div className="text-[3.5rem] md:text-[4.5rem] mb-2 animate-bounce text-center drop-shadow-xl">🌟🎊🌟</div>
-                            <h2 className="title-text text-2xl md:text-4xl font-bold text-sky-500 mb-2 whitespace-nowrap px-4">{selectedStudent} 학생, 정말 대단해요!</h2>
-                            <p className="text-lg md:text-xl text-gray-400 font-bold px-4 whitespace-nowrap">
+                        <div className="py-1 md:py-2 flex flex-col items-center justify-center overflow-hidden">
+                            <div className="text-[3rem] md:text-[4rem] mb-1 animate-bounce text-center drop-shadow-xl">🌟🎊🌟</div>
+                            <h2 className="title-text text-xl md:text-3xl font-bold text-sky-500 mb-1 whitespace-nowrap px-4">{selectedStudent} 학생, 정말 대단해요!</h2>
+                            <p className="text-base md:text-xl text-gray-400 font-bold px-4 whitespace-nowrap">
                                 {mode === 'morning' ? "오늘 하루도 신나게 보내봅시다! 화이팅! 💪" : "준비 끝! 즐겁게 수업에 참여해봅시다! 📖"}
                             </p>
-                            <div className="mt-5 text-base md:text-lg text-gray-300 font-bold animate-pulse">잠시 후 처음 화면으로 돌아갑니다...</div>
+                            <div className="mt-3 text-sm md:text-base text-gray-300 font-bold animate-pulse">잠시 후 처음 화면으로 돌아갑니다...</div>
                         </div>
                     )}
                 </div>
