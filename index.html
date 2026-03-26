@@ -59,12 +59,13 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwa7CI_PaEpveuMqpSSR95R2bnUkD81TklfqNP0XeE03IknTUz0TOdVrs0tLiGAX6mI/exec";
+        const GAS_WEB_APP_URL = "YOUR_GAS_WEB_APP_URL_HERE";
 
         const App = () => {
             const [mode, setMode] = useState(''); // 'morning', 'class'
-            const [step, setStep] = useState('select-mode'); // select-mode, select-student, select-emotion, checklist, class-checklist, success
+            const [step, setStep] = useState('select-mode'); 
             const [selectedStudent, setSelectedStudent] = useState('');
+            const [selectedSubject, setSelectedSubject] = useState('');
             const [emotion, setEmotion] = useState(0);
             const [checklist, setChecklist] = useState({
                 item1: false, item2: false, item3: false, item4: false
@@ -74,9 +75,9 @@
             });
 
             // 오디오 객체 생성
-            const clickAudio = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3')); // Pop
-            const completeAudio = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3')); // Bell
-            const successAudio = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/1433/1433-preview.mp3')); // Fanfare/Cheer
+            const clickAudio = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3'));
+            const completeAudio = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3'));
+            const successAudio = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/1433/1433-preview.mp3'));
 
             const playSound = (type) => {
                 let audio;
@@ -91,6 +92,7 @@
             };
 
             const students = ['송건', '현동규'];
+            const subjects = ['국어', '수학', '사회', '진로와 직업'];
             const emotions = [
                 { value: 1, emoji: '😞', label: '속상해요' },
                 { value: 2, emoji: '😕', label: '그냥그래요' },
@@ -111,8 +113,14 @@
                 if (mode === 'morning') {
                     setStep('select-emotion');
                 } else {
-                    setStep('class-checklist');
+                    setStep('select-subject');
                 }
+            };
+
+            const handleSubjectSelect = (sub) => {
+                playSound('click');
+                setSelectedSubject(sub);
+                setStep('class-checklist');
             };
 
             const handleEmotionSelect = (val) => {
@@ -136,13 +144,16 @@
 
             const handleSubmit = async () => {
                 playSound('success');
+                const emotionLabel = emotions.find(e => e.value === emotion)?.label || "";
+                const emotionString = emotion > 0 ? `${emotion} (${emotionLabel})` : "-";
+                
                 const data = {
-                    mode: mode === 'morning' ? "아침등교" : "수업준비",
+                    mode: mode === 'morning' ? "아침등교" : `수업준비(${selectedSubject})`,
                     student: selectedStudent,
-                    emotion: mode === 'morning' ? emotion : "-",
+                    emotion: emotionString,
                     details: mode === 'morning' 
                         ? `인사:${checklist.item1},폰:${checklist.item2},노트:${checklist.item3},거울:${checklist.item4}`
-                        : `교과서:${classChecklist.book},노트:${classChecklist.note},아이북:${classChecklist.ibook},필기구:${classChecklist.pencil}`,
+                        : `과목:${selectedSubject},교과서:${classChecklist.book},노트:${classChecklist.note},아이북:${classChecklist.ibook},필기구:${classChecklist.pencil}`,
                     date: new Date().toLocaleString()
                 };
 
@@ -158,10 +169,10 @@
             };
 
             const resetApp = () => {
-                playSound('click');
                 setMode('');
                 setStep('select-mode');
                 setSelectedStudent('');
+                setSelectedSubject('');
                 setEmotion(0);
                 setChecklist({ item1: false, item2: false, item3: false, item4: false });
                 setClassChecklist({ book: false, note: false, ibook: false, pencil: false });
@@ -204,6 +215,24 @@
                                         className="btn-student bg-gradient-to-b from-yellow-100 to-yellow-200 hover:from-yellow-200 hover:to-yellow-300 text-sky-800 p-6 md:p-10 rounded-[2.5rem] shadow-lg border-b-[10px] border-yellow-400 active:border-b-0 active:translate-y-[8px] w-full flex items-center justify-center"
                                     >
                                         <span className="text-4xl md:text-6xl font-bold whitespace-nowrap">{name}</span>
+                                    </button>
+                                ))}
+                            </div>
+                            <button onClick={resetApp} className="mt-8 text-xl font-bold text-gray-400 hover:text-sky-500 transition-colors underline decoration-dotted whitespace-nowrap">처음으로 돌아가기</button>
+                        </div>
+                    )}
+
+                    {step === 'select-subject' && (
+                        <div className="py-2 w-full">
+                            <h1 className="title-text text-3xl md:text-5xl font-bold text-green-500 mb-6 leading-tight drop-shadow-sm text-center px-4">어떤 수업인가요? 📖</h1>
+                            <div className="grid grid-cols-2 gap-4 md:gap-6 px-4">
+                                {subjects.map(sub => (
+                                    <button 
+                                        key={sub}
+                                        onClick={() => handleSubjectSelect(sub)}
+                                        className="btn-student bg-gradient-to-b from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 text-green-800 p-6 md:p-8 rounded-[2.5rem] shadow-lg border-b-[10px] border-green-300 w-full flex items-center justify-center"
+                                    >
+                                        <span className="text-3xl md:text-5xl font-bold whitespace-nowrap">{sub}</span>
                                     </button>
                                 ))}
                             </div>
@@ -261,7 +290,7 @@
 
                     {step === 'class-checklist' && (
                         <div className="py-1">
-                            <h2 className="title-text text-2xl md:text-3xl font-bold text-green-500 mb-2">수업 준비물을 챙겨봅시다! 📚</h2>
+                            <h2 className="title-text text-2xl md:text-3xl font-bold text-green-500 mb-2">{selectedSubject} 준비물을 챙겨봅시다! 📚</h2>
                             <div className="space-y-1 md:space-y-2 mb-4 max-w-2xl mx-auto">
                                 {[
                                     { id: 'book', label: '📖 이번 시간 교과서' },
@@ -294,7 +323,7 @@
                             <div className="text-[3rem] md:text-[4rem] mb-1 animate-bounce text-center drop-shadow-xl">🌟🎊🌟</div>
                             <h2 className="title-text text-xl md:text-3xl font-bold text-sky-500 mb-1 whitespace-nowrap px-4">{selectedStudent} 학생, 정말 대단해요!</h2>
                             <p className="text-base md:text-xl text-gray-400 font-bold px-4 whitespace-nowrap">
-                                {mode === 'morning' ? "오늘 하루도 신나게 보내봅시다! 화이팅! 💪" : "준비 끝! 즐겁게 수업에 참여해봅시다! 📖"}
+                                {mode === 'morning' ? "오늘 하루도 신나게 보내봅시다! 화이팅! 💪" : `${selectedSubject} 준비 끝! 즐겁게 수업에 참여해봅시다! 📖`}
                             </p>
                             <div className="mt-3 text-sm md:text-base text-gray-300 font-bold animate-pulse">잠시 후 처음 화면으로 돌아갑니다...</div>
                         </div>
