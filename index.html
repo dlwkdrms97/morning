@@ -60,7 +60,7 @@
         const { useState, useEffect, useRef } = React;
 
         // 구글 앱 스크립트 배포 URL을 여기에 넣어주세요!
-        const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxdhQ2UDW-FYlZLmjFgcovdnF7DeRddsbAsglirnvyrDAuhXb3bSWDDbi3ojlKEx766/exec";
+        const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwVRtVr5Kp7DrJUQ2PDhyMHeiN9kTN_Q3hG9VuiZm_giRCgjkIO4j2EAKspLBpUOIg/exec";
 
         const App = () => {
             const [mode, setMode] = useState(''); // 'morning', 'class'
@@ -158,7 +158,7 @@
                     date: new Date().toLocaleString()
                 };
 
-                if (GAS_WEB_APP_URL !== "YOUR_GAS_WEB_APP_URL_HERE") {
+                if (GAS_WEB_APP_URL !== "https://script.google.com/macros/s/AKfycbwVRtVr5Kp7DrJUQ2PDhyMHeiN9kTN_Q3hG9VuiZm_giRCgjkIO4j2EAKspLBpUOIg/exec") {
                     try {
                         const queryParams = new URLSearchParams(data).toString();
                         fetch(`${GAS_WEB_APP_URL}?${queryParams}`, { mode: 'no-cors' });
