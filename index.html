@@ -60,7 +60,7 @@
         const { useState, useEffect, useRef } = React;
 
         // 구글 앱 스크립트 배포 URL을 여기에 넣어주세요!
-        const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxmzYABqDLZ-2_CWR8AaS9oGwwTBJEaZh63Mnsem6YszrOt9a7eaoIjAHv0sZQwpCCs4Q/exec";
+        const GAS_WEB_APP_URL = "YOUR_GAS_WEB_APP_URL_HERE";
 
         const App = () => {
             const [mode, setMode] = useState(''); // 'morning', 'class'
@@ -93,7 +93,7 @@
             };
 
             const students = ['송건', '현동규'];
-            const subjects = ['국어', '수학', '사회', '진로와 직업'];
+            const subjects = ['국어', '수학', '사회', '진로와 직업', '언어치료'];
             const emotions = [
                 { value: 1, emoji: '😞', label: '속상해요' },
                 { value: 2, emoji: '😕', label: '그냥그래요' },
@@ -144,31 +144,30 @@
             const allClassChecked = Object.values(classChecklist).every(v => v === true);
 
             const handleSubmit = async () => {
-    playSound('success');
-    const emotionLabel = emotions.find(e => e.value === emotion)?.label || "";
-    const emotionString = emotion > 0 ? `${emotion} (${emotionLabel})` : "-";
-    
-    const data = {
-        mode: mode === 'morning' ? "아침등교" : `수업준비(${selectedSubject})`,
-        student: selectedStudent,
-        emotion: emotionString,
-        details: mode === 'morning' 
-            ? `인사:${checklist.item1},폰:${checklist.item2},노트:${checklist.item3},거울:${checklist.item4}`
-            : `과목:${selectedSubject},교과서:${classChecklist.book},노트:${classChecklist.note},아이북:${classChecklist.ibook},필기구:${classChecklist.pencil}`,
-        date: new Date().toLocaleString()
-    };
+                playSound('success');
+                const emotionLabel = emotions.find(e => e.value === emotion)?.label || "";
+                const emotionString = emotion > 0 ? `${emotion} (${emotionLabel})` : "-";
+                
+                const data = {
+                    mode: mode === 'morning' ? "아침등교" : `수업준비(${selectedSubject})`,
+                    student: selectedStudent,
+                    emotion: emotionString,
+                    details: mode === 'morning' 
+                        ? `인사:${checklist.item1},폰:${checklist.item2},노트:${checklist.item3},거울:${checklist.item4}`
+                        : `과목:${selectedSubject},교과서:${classChecklist.book},노트:${classChecklist.note},아이북:${classChecklist.ibook},필기구:${classChecklist.pencil}`,
+                    date: new Date().toLocaleString()
+                };
 
-    // 불필요한 if문을 제거하고, 무조건 fetch가 실행되도록 수정했습니다.
-    try {
-        const queryParams = new URLSearchParams(data).toString();
-        fetch(`${GAS_WEB_APP_URL}?${queryParams}`, { mode: 'no-cors' });
-    } catch (e) { 
-        console.error("전송 오류:", e); 
-    }
+                if (GAS_WEB_APP_URL !== "YOUR_GAS_WEB_APP_URL_HERE") {
+                    try {
+                        const queryParams = new URLSearchParams(data).toString();
+                        fetch(`${GAS_WEB_APP_URL}?${queryParams}`, { mode: 'no-cors' });
+                    } catch (e) { console.error(e); }
+                }
 
-    setStep('success');
-    setTimeout(() => resetApp(), 5000);
-};
+                setStep('success');
+                setTimeout(() => resetApp(), 5000);
+            };
 
             const resetApp = () => {
                 setMode('');
