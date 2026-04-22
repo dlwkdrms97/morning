@@ -2,298 +2,283 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>아이-온 (I-ON) | 교사용 인사이트</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = { darkMode: 'class', theme: { extend: { colors: { brand: { 50: '#fff7ed', 100: '#ffedd5', 500: '#f97316', 600: '#ea580c' } }, borderRadius: { '4xl': '2rem', '5xl': '3rem' } } } }
-    </script>
-    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-    <link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>산양중학교 홍보 챗봇</title>
     <style>
-        body { font-family: 'Pretendard', sans-serif; background-color: #f1f5f9; transition: all 0.5s; }
-        .dark body { background-color: #050505; color: #f1f5f9; }
-        .title-font { font-family: 'Gaegu', cursive; }
-        .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.3); }
-        .dark .glass { background: rgba(20, 20, 20, 0.8); border: 1px solid rgba(255, 255, 255, 0.03); }
-        .bento-card { background: white; border-radius: 2.5rem; border: 1px solid #e2e8f0; transition: all 0.3s; overflow: hidden; }
-        .dark .bento-card { background: #141414; border-color: #222; }
-        .tab-active { background: white; box-shadow: 0 10px 20px -5px rgba(0,0,0,0.1); color: #f97316; }
-        .dark .tab-active { background: #262626; color: #fb923c; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .gradient-orange { background: linear-gradient(135deg, #f97316 0%, #fb923c 100%); }
+        :root {
+            --kakao-yellow: #FEE500;
+            --chat-bg: #BACEE0;
+            --user-bubble: #FEE500;
+            --bot-bubble: #FFFFFF;
+        }
+
+        * { box-sizing: border-box; font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; }
+        body { margin: 0; padding: 0; background-color: var(--chat-bg); height: 100vh; display: flex; flex-direction: column; }
+
+        /* Header */
+        header {
+            background-color: #f8f8f8;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .back-btn { font-size: 20px; margin-right: 15px; cursor: pointer; color: #333; }
+        .profile-info h1 { margin: 0; font-size: 16px; color: #000; }
+        .profile-info p { margin: 0; font-size: 12px; color: #666; }
+
+        /* Chat Window */
+        #chat-window {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message { max-width: 80%; padding: 10px 15px; border-radius: 15px; font-size: 14px; line-height: 1.5; position: relative; word-break: break-all; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .bot { align-self: flex-start; background-color: var(--bot-bubble); color: #000; border-top-left-radius: 2px; }
+        .user { align-self: flex-end; background-color: var(--user-bubble); color: #000; border-top-right-radius: 2px; }
+
+        /* Quick Replies */
+        #quick-replies {
+            padding: 10px;
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            background: rgba(255,255,255,0.3);
+            white-space: nowrap;
+        }
+        #quick-replies::-webkit-scrollbar { display: none; }
+        .chip {
+            background: #fff;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 13px;
+            border: 1px solid #ddd;
+            cursor: pointer;
+        }
+
+        /* Input Area */
+        #input-area {
+            background: #fff;
+            padding: 10px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        #user-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            outline: none;
+            background: #f9f9f9;
+        }
+        #send-btn {
+            background: var(--kakao-yellow);
+            border: none;
+            width: 40px;
+            height: 32px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            color: #333;
+        }
+        #send-btn svg { width: 20px; height: 20px; fill: currentColor; }
     </style>
 </head>
-<body class="min-h-screen no-scrollbar">
-    <div id="root"></div>
-    <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
-        const supabaseClient = supabase.createClient('https://uylrclocdtkninhctmit.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5bHJjbG9jZHRrbmluaGN0bWl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNTczMjAsImV4cCI6MjA5MDczMzMyMH0.7X2AcYlIMK161wi1mAGaiPnWxbdydTwMiET0X4q6jEs');
+<body>
+    <header>
+        <div class="back-btn">〈</div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <img src="산양중학교 로고(70%).png" alt="로고" style="width: 35px; height: 35px; object-fit: contain;">
+            <div class="profile-info">
+                <h1>🌲 산양중학교 홍보 선배</h1>
+                <p>활동 중</p>
+            </div>
+        </div>
+    </header>
 
-        const SESSION_TIMEOUT_MS = 60 * 60 * 1000;
+    <div id="chat-window">
+        <div class="message bot">
+            안녕! 반가워~ 😊 나는 통영 산양중학교의 자랑거리를 알려주러 온 선배야!<br><br>
+            중학교 생활이 궁금하거나 걱정되는 게 있니? 무엇이든 물어봐! 100가지 질문에도 척척 대답해줄게! 🌲✨
+        </div>
+    </div>
 
-        const App = () => {
-            const [isVerified, setIsVerified] = useState(sessionStorage.getItem('ion_verified') === 'true');
-            const [vCode, setVCode] = useState('');
-            const [teacher, setTeacher] = useState(JSON.parse(localStorage.getItem('ion_teacher')));
-            const [activeTab, setActiveTab] = useState('morning');
-            const [data, setData] = useState({ morning: [], class: [], reflect: [], students: [], heart: [] });
-            
-            const getKSTDate = () => {
-                const now = new Date();
-                const offset = now.getTimezoneOffset() * 60000;
-                return new Date(now - offset).toISOString().split('T')[0];
-            };
+    <div id="quick-replies">
+        <div class="chip" style="background: #fff5f5; font-weight: bold; border-color: #feb2b2;" onclick="showHelp()">❓ 도움말</div>
+        <div class="chip" style="background: #e6f3ff; font-weight: bold; border-color: #add8e6;" onclick="window.open('https://dlwkdrms97.github.io/sanyang/index.html')">🌲 산양알리미 보기</div>
+        <div class="chip" onclick="quickAsk('오늘 급식 메뉴 알려줘! 🍱')">🍱 급식은?</div>
+        <div class="chip" onclick="quickAsk('동아리는 어떤 게 있어? 🎸')">🎸 동아리 목록</div>
+        <div class="chip" onclick="quickAsk('수학여행 전액 지원 진짜야? 🚌')">🚌 수학여행</div>
+        <div class="chip" onclick="quickAsk('버스비가 100원이라며? 🚌')">💰 버스비 100원</div>
+    </div>
 
-            const [selectedDate, setSelectedDate] = useState(getKSTDate());
-            const [loading, setLoading] = useState(false);
-            const [selectedIds, setSelectedIds] = useState([]);
-            const [darkMode, setDarkMode] = useState(localStorage.getItem('ion_dark') === 'true');
-            const [showHelp, setShowHelp] = useState(false);
-            const [newStudent, setNewStudent] = useState({ number: '', name: '', pin: '' });
-            const fileInputRef = useRef(null);
+    <div id="input-area">
+        <input type="text" id="user-input" placeholder="메시지를 입력하세요..." autocomplete="off">
+        <button id="send-btn">
+            <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
+    </div>
 
-            useEffect(() => {
-                document.documentElement.classList.toggle('dark', darkMode);
-                localStorage.setItem('ion_dark', darkMode);
-            }, [darkMode]);
+    <script>
+        const chatWindow = document.getElementById('chat-window');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
 
-            const fetchData = async () => {
-                if(!teacher) return;
-                setLoading(true);
-                const cp = `${teacher.grade}-${teacher.classNum}`;
-                const start = `${selectedDate}T00:00:00`;
-                const end = `${selectedDate}T23:59:59`;
-                try {
-                    const [m, c, r, s, h] = await Promise.all([
-                        supabaseClient.from('morning_checkin').select('*').eq('user_class', cp).gte('created_at', start).lte('created_at', end).order('created_at', { ascending: false }),
-                        supabaseClient.from('class_preparation').select('*').eq('user_class', cp).gte('created_at', start).lte('created_at', end),
-                        supabaseClient.from('reflect_record').select('*').eq('user_class', cp).gte('created_at', start).lte('created_at', end),
-                        supabaseClient.from('student_info').select('*').eq('user_class', cp).order('user_number', { ascending: true }),
-                        supabaseClient.from('heart_on').select('*').eq('user_class', cp).order('created_at', { ascending: false })
-                    ]);
-                    setData({ morning: m.data||[], class: c.data||[], reflect: r.data||[], students: s.data||[], heart: h.data||[] });
-                } catch (e) { console.error(e); } finally { setLoading(false); }
-            };
+        // 100개 이상의 키워드 대응 데이터베이스
+        const responses = {
+            // [인사 및 정체]
+            "안녕": "안녕! 진짜 반가워~ 😊 궁금한 거 있으면 선배한테 다 물어봐!",
+            "누구": "나는 산양중학교의 모든 정보를 꿰뚫고 있는 홍보 요정 선배야! 🧚‍♂️",
+            "이름": "이름은 따로 없지만 '산양 선배'라고 불러주면 좋아!",
+            "반가워": "나도 너무 반가워! 우리 내년에 학교에서 만날 수 있는 거지? ❤️",
 
-            useEffect(() => { if(teacher) fetchData(); }, [teacher, selectedDate]);
+            // [먹거리 - 급식/매점]
+            "급식": "🍱 우리 학교 급식은 통영에서 제일 맛있다고 자부해! 조리사님들이 직접 담근 김치도 진짜 꿀맛이야.",
+            "메뉴": "오늘의 메뉴가 궁금하구나? '산양알리미'를 확인하면 오늘 어떤 맛있는 반찬이 나오는지 바로 볼 수 있어! 🍱",
+            "맛있어": "응! 진짜 맛있어. 학생들이 좋아하는 고기 반찬이나 스파게티 같은 특식도 자주 나온단다.",
+            "매점": "🥨 아쉽게도 매점은 없지만, 대신 '늘품마트'라는 재미있는 활동을 통해 맛있는 간식을 접할 기회가 많아!",
+            "배고파": "그치, 공부하다 보면 배고프지! 급식 양도 푸짐하니까 점심시간을 기대해도 좋아.",
+            "고기": "🍗 고기 반찬? 당연히 나오지! 돈까스, 불고기, 닭강정... 상상만 해도 행복하다 그치?",
+            "반찬": "반찬은 보통 3~4가지에 국 하나, 그리고 디저트가 나올 때도 있어! 🍱",
+            "디저트": "🍫 가끔 요거트나 과일, 푸딩 같은 맛있는 후식도 나오니까 기대해봐!",
 
-            const downloadCSV = () => {
-                const list = data[activeTab] || [];
-                if (list.length === 0) return alert('데이터가 없습니다.');
-                const headers = Object.keys(list[0]);
-                const rows = list.map(row => headers.map(h => JSON.stringify(row[h] || '')).join(','));
-                const csv = "\uFEFF" + [headers.join(','), ...rows].join('\r\n');
-                const link = document.createElement("a");
-                link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
-                link.download = `ION_${activeTab}_${selectedDate}.csv`; link.click();
-            };
+            // [시설 - 학교 건물/환경]
+            "골프": "⛳ 우리 학교엔 무려 '골프 연습장'이 있어! 방과후에 골프를 배울 수 있는데, 이거 진짜 대박 혜택이지?",
+            "연습장": "⛳ 맞아, 학교 안에 실내외 골프 연습 시설이 잘 갖춰져 있어서 누구나 배울 수 있어.",
+            "체육관": "🏀 체육관 이름은 '장군봉'이야! 비가 와도 친구들이랑 신나게 농구나 배드민턴을 칠 수 있어.",
+            "화장실": "🚽 걱정 마! 우리 학교 화장실은 정말 깨끗하고 칸수도 넉넉해서 불편함이 전혀 없어.",
+            "도서관": "📚 도서관은 시원하고 조용해서 점심시간 아지트로 딱이야. 재미있는 만화책도 많단다!",
+            "아이북": "💻 전교생 1인 1태블릿(아이북)을 지원해줘! 수업 때 쓰고 집에 가져가서 공부할 때 써도 돼.",
+            "태블릿": "💻 맞아, 최신형 태블릿으로 공부하니까 훨씬 재밌고 발표 수업도 신나!",
+            "에어컨": "❄️ 여름엔 에어컨 빵빵! 겨울엔 히터 빵빵! 공부하기 딱 좋은 온도야.",
+            "운동장": "🏃‍♂️ 운동장도 넓고 잔디도 잘 관리되어 있어서 뛰어놀기 정말 좋아.",
 
-            const handleExcelUpload = (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = async (evt) => {
-                    try {
-                        const wb = XLSX.read(new Uint8Array(evt.target.result), { type: 'array' });
-                        const jsonData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-                        const cp = `${teacher.grade}-${teacher.classNum}`;
-                        const students = jsonData.map(r => ({ user_class: cp, user_number: String(r['번호']||r['학번']||''), user_name: String(r['이름']||r['성명']||''), pin: String(r['PIN']||r['핀']||'1234') })).filter(s => s.user_number && s.user_name);
-                        const { error } = await supabaseClient.from('student_info').insert(students);
-                        if(error) throw error;
-                        alert('일괄 등록 완료'); fetchData();
-                    } catch (err) { alert(err.message); }
-                };
-                reader.readAsArrayBuffer(file);
-            };
+            // [복장 및 외모 규칙]
+            "교복": "👕 우리 교복 디자인이 깔끔하고 예뻐서 다들 좋아해! 입어보면 '아 나도 이제 중학생이구나' 실감 날걸?",
+            "체육복": "👟 체육복은 활동하기 편한 디자인이야! 체육 있는 날은 진짜 날아다닐 수 있어.",
+            "사복": "👕 평소엔 교복을 입지만, 한 달에 한 번 '프리데이'에는 네가 원하는 사복을 마음껏 입을 수 있어!",
+            "프리데이": "맞아! 마지막 주 금요일은 프리데이~ ✨ 다들 예쁘게 꾸미고 오는 날이지.",
+            "머리": "💇‍♀️ 두발 규정은 아주 자유로운 편이야! 네 개성을 존중해주니까 너무 걱정 마.",
+            "염색": "💇‍♂️ 너무 튀는 형광색만 아니면 어느 정도의 염색은 괜찮아! 그래도 학생다운 모습이 제일 예쁘긴 해.",
+            "파마": "파마도 가능해! 네가 원하는 스타일로 예쁘게 하고 와~ 😊",
+            "화장": "💄 진한 화장은 안 되지만, 간단한 틴트나 선크림 정도는 괜찮아. 우리 예의는 지키면서 예뻐지자!",
+            "귀걸이": "👂 귀걸이나 피어싱도 너무 크지 않은 건 이해해주시는 분위기야.",
+            "실내화": "👟 학교 안에서는 편한 실내화를 신으면 돼!",
 
-            const toggleSelect = (id) => setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
-            const toggleSelectAll = (list) => setSelectedIds(selectedIds.length === list.length ? [] : list.map(i => i.id));
-            
-            const handleDelete = async () => {
-                if(!confirm(`${selectedIds.length}개를 영구 삭제하시겠습니까?`)) return;
-                const tableMap = { morning: 'morning_checkin', class: 'class_preparation', reflect: 'reflect_record', heart: 'heart_on', students: 'student_info' };
-                const { error } = await supabaseClient.from(tableMap[activeTab]).delete().in('id', selectedIds);
-                if(!error) { setSelectedIds([]); fetchData(); }
-            };
+            // [공부 및 시험]
+            "시험": "📝 1학년은 '자유학기제'라 1학기 동안은 큰 시험이 없어! 시험 부담 없이 학교에 적응할 수 있지.",
+            "중간고사": "📝 1학년 1학기에는 중간고사가 없단다! 대신 수행평가를 즐겁게 참여하면 돼.",
+            "기말고사": "기말고사도 1학년 1학기엔 없어! 2학기부터 천천히 준비하면 돼. 📝",
+            "공부": "✍️ 중학교 공부가 초등학교보단 조금 어렵지만, 선생님들이 친절하게 가르쳐주시니 걱정 마!",
+            "수학": "📐 수학 포기하지 마! 우리 학교엔 보충 설명해주시는 선생님들도 계시고 수학 체험 활동도 많아.",
+            "영어": "🔤 원어민 선생님이랑 대화하는 시간이 많아서 영어가 정말 재밌어질 거야!",
+            "숙제": "📝 숙제는 적당히 있는 편이야. 그날 배운 거 그날 복습하면 금방 끝낼 수 있어.",
+            "성적": "💯 성적보다는 네가 얼마나 열심히 참여했는지가 중요해! 우리 학교는 과정을 소중히 여겨.",
+            "자유학기제": "네 꿈을 찾는 시간이야! 🎨 시험 대신 다양한 진로 체험과 동아리 활동을 하는 학기지.",
 
-            const handleAddStudent = async () => {
-                if(!newStudent.number || !newStudent.name || !newStudent.pin) return alert('정보 입력 필요');
-                const cp = `${teacher.grade}-${teacher.classNum}`;
-                const { error } = await supabaseClient.from('student_info').insert([{ user_class: cp, user_number: newStudent.number, user_name: newStudent.name, pin: newStudent.pin }]);
-                if(!error) { setNewStudent({number:'', name:'', pin:''}); fetchData(); }
-            };
+            // [인간관계 및 분위기]
+            "선생님": "👨‍🏫 우리 학교 선생님들은 다들 천사 같으셔! 고민 있으면 언제든 상담도 해주시고 정말 다정해.",
+            "무서워": "😨 중학교가 처음이라 무섭지? 걱정 마. 우리 학교는 분위기가 정말 화목해서 금방 적응할 거야.",
+            "친구": "👫 좋은 친구들 많이 사귈 수 있어! 전교생이 많지 않아서 서로서로 다 친하게 지내는 가족 같은 분위기야.",
+            "왕따": "🚫 괴롭힘이나 왕따는 우리 학교에서 절대 있을 수 없는 일이야! 선생님들과 선배들이 늘 지켜보고 도와줄게.",
+            "괴롭힘": "절대 안 돼! 🤝 우리는 서로 돕고 응원하는 행복한 학교를 만들고 있어.",
+            "연애": "💕 어머~ 벌써 그런 게 궁금해? 우리 학교에도 풋풋한 커플들이 가끔 보이긴 하더라! 부럽지? ㅎㅎ",
+            "남친": "남자친구? 생길 수도 있지! 하지만 공부도 같이 열심히 하는 커플이 제일 멋진 법이야. 💕",
+            "여친": "여자친구 생기면 선배한테 꼭 자랑해줘~ 응원해줄게! 😊",
+            "선배": "🙋‍♂️ 나 같은 선배들? 다들 엄청 착해! 복도에서 만나면 반갑게 인사해줘.",
 
-            const HelpModal = () => (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md animate-in fade-in">
-                    <div className="bento-card max-w-2xl w-full max-h-[80vh] overflow-y-auto p-10 space-y-8 dark:bg-zinc-900 border-none shadow-2xl no-scrollbar">
-                        <div className="flex justify-between items-center border-b dark:border-white/5 pb-6">
-                            <h2 className="text-3xl font-black dark:text-white">아이-온 가이드 📖</h2>
-                            <button onClick={()=>setShowHelp(false)} className="w-10 h-10 rounded-full bg-gray-100 dark:bg-white/5 font-bold">×</button>
-                        </div>
-                        <div className="space-y-6 text-sm leading-relaxed text-gray-500">
-                            <section><h3 className="text-orange-500 font-black mb-2">🌅 Morning ON</h3><p>학생 기분과 3대 미션 완료 현황을 확인합니다. 1도는 상담요함으로 자동 강조됩니다.</p></section>
-                            <section><h3 className="text-teal-500 font-black mb-2">🎒 Class ON</h3><p>교시별 수업 준비 목표를 확인합니다. 늘품반 학생은 IB 학습자상으로 표시됩니다.</p></section>
-                            <section><h3 className="text-purple-500 font-black mb-2">✨ Reflect ON</h3><p>수업 성찰 별점과 내용을 확인합니다. 정규화 데이터를 기반으로 기록됩니다.</p></section>
-                            <section><h3 className="text-red-500 font-black mb-2">❤️ HEART ON</h3><p>학생들의 비밀 상담 편지함입니다. 읽지 않은 편지는 빨간색 NEW 배지가 표시됩니다.</p></section>
-                            <section><h3 className="text-blue-500 font-black mb-2">👤 학생 관리</h3><p>학생 추가, 삭제, 비밀번호(PIN) 확인이 가능합니다. 엑셀로 명단을 일괄 등록할 수 있습니다.</p></section>
-                        </div>
-                        <button onClick={()=>setShowHelp(false)} className="w-full py-5 rounded-[2rem] bg-brand-500 text-white font-black text-xl">가이드 닫기</button>
-                    </div>
-                </div>
-            );
+            // [특별 활동 및 혜택]
+            "고양이": "🐱 우리 학교엔 귀여운 길고양이들이 살아! '오묘한반' 동아리 친구들이 정성껏 돌봐주고 있단다.",
+            "동아리": "🎸 댄스, 밴드, 미술, 수어, 컴퓨터, 배드민턴 등 12개나 되는 멋진 동아리가 있어! 골라잡아~",
+            "축제": "🎉 '장군봉 축제'가 열리면 전교생이 무대에서 주인공이 돼! 진짜 신나고 즐거운 날이지.",
+            "여행": "🚌 우리 학교는 여행 스케일이 달라! 수련활동, 수학여행, 졸업여행을 아주 알차게 다녀온단다.",
+            "수학여행": "🚌 2학년 때 서울로 가는데, 학교에서 비용을 '전액 지원'해줘! 부모님께 효도하는 학교지?",
+            "공짜": "💰 맞아! 수학여행이나 수련활동비 걱정 마. 우리 학교는 학생들을 위해 아낌없이 지원해주거든.",
+            "버스": "🚌 통영 중학생은 버스비가 딱 100원! 등교할 때 부담 없이 버스 타고 올 수 있어.",
+            "100원": "💰 통영 중학생 전용 교통카드를 쓰면 100원! 진짜 최고지? 우리 학교 오기 참 쉽다~",
+            "장학금": "🎁 공부를 열심히 하거나 성실하게 생활하면 장학금을 받을 기회도 아주 많아!",
 
-            if (!isVerified) return (
-                <div className="min-h-screen flex items-center justify-center p-6 bg-[#f8fafc] dark:bg-[#050505]">
-                    <div className="bento-card p-12 max-w-sm w-full text-center space-y-8 border-none shadow-2xl">
-                        <img src="logo.png" className="w-24 h-24 mx-auto object-contain" />
-                        <h2 className="text-3xl font-black title-font text-orange-600">관리자 인증</h2>
-                        <input type="password" value={vCode} onChange={e=>setVCode(e.target.value)} onKeyDown={e=>e.key==='Enter' && (vCode==='1010'?(setIsVerified(true),sessionStorage.setItem('ion_verified','true')):alert('오류'))} placeholder="••••" className="w-full p-5 rounded-3xl bg-gray-50 dark:bg-zinc-900 border-none text-center font-bold text-2xl tracking-[0.5em] outline-none" />
-                        <button onClick={()=>vCode==='1010'?(setIsVerified(true),sessionStorage.setItem('ion_verified','true')):alert('오류')} className="w-full py-5 rounded-3xl bg-brand-500 text-white font-black text-xl hover:bg-brand-600 transition-all">인증하기</button>
-                    </div>
-                </div>
-            );
-
-            if (!teacher) return (
-                <div className="min-h-screen flex items-center justify-center p-6 bg-[#f1f5f9] dark:bg-[#050505]">
-                    <div className="bento-card p-12 max-w-md w-full text-center space-y-10 border-none shadow-2xl">
-                        <img src="logo.png" className="w-24 h-24 mx-auto object-contain" />
-                        <h2 className="text-4xl font-black dark:text-white leading-tight">선생님, 안녕하세요!<br/><span className="text-orange-500 italic">I-ON Insight</span></h2>
-                        <div className="grid grid-cols-2 gap-4">
-                            <select id="g" className="p-5 rounded-3xl bg-gray-50 dark:bg-zinc-900 font-bold outline-none"><option value="">학년</option><option value="1">1학년</option><option value="2">2학년</option><option value="3">3학년</option></select>
-                            <select onChange={e=>{
-                                const g = document.getElementById('g').value;
-                                if(g && e.target.value) { const info = {grade:g, classNum:e.target.value}; setTeacher(info); localStorage.setItem('ion_teacher', JSON.stringify(info)); }
-                            }} className="p-5 rounded-3xl bg-gray-50 dark:bg-zinc-900 font-bold outline-none"><option value="">반</option><option value="1">1반</option><option value="2">2반</option><option value="늘품">늘품반</option></select>
-                        </div>
-                    </div>
-                </div>
-            );
-
-            const unreadHeart = data.heart.filter(h => !h.is_read).length;
-            const currentTabList = data[activeTab] || [];
-
-            return (
-                <div className="min-h-screen flex flex-col pb-20">
-                    {showHelp && <HelpModal />}
-                    <header className="p-6 md:p-8 flex justify-between items-center sticky top-0 z-50 glass border-b dark:border-white/5">
-                        <div className="flex items-center gap-4">
-                            <img src="logo.png" className="w-12 h-12 object-contain" />
-                            <div><h1 className="text-xl font-black dark:text-white tracking-tighter uppercase italic">I-ON Insight</h1><p className="text-[10px] font-bold text-orange-500 uppercase tracking-widest">{teacher.grade}학년 {teacher.classNum}반</p></div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                            <button onClick={()=>setShowHelp(true)} className="w-12 h-12 rounded-2xl glass flex items-center justify-center text-xl font-black text-orange-500 hover:scale-110 transition-transform">?</button>
-                            <button onClick={()=>setDarkMode(!darkMode)} className="w-12 h-12 rounded-2xl glass flex items-center justify-center text-xl">{darkMode?'☀️':'🌙'}</button>
-                            <button onClick={()=>{localStorage.removeItem('ion_teacher'); setTeacher(null);}} className="text-xs font-bold text-gray-400 hover:text-red-500">로그아웃</button>
-                        </div>
-                    </header>
-
-                    <main className="max-w-7xl mx-auto w-full p-6 md:p-10 space-y-10 animate-in fade-in duration-700">
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                            {[ { label: 'Today Check-in', value: data.morning.length, unit: '명', color: 'text-blue-500' }, { label: 'Avg Temp', value: data.morning.length ? (data.morning.reduce((a,c)=>a+c.temp,0)/data.morning.length).toFixed(1) : 0, unit: '도', color: 'text-orange-500' }, { label: 'Learning Records', value: data.reflect.length, unit: '건', color: 'text-purple-500' }, { label: 'Heart Letter', value: unreadHeart, unit: '건', color: 'text-red-500', alert: unreadHeart > 0 } ].map((s, idx) => (
-                                <div key={idx} className="bento-card p-8 flex flex-col justify-between h-44 shadow-sm border-none dark:bg-zinc-900">
-                                    <span className={`text-[10px] font-black uppercase tracking-widest ${s.color}`}>{s.label}</span>
-                                    <h3 className={`text-5xl font-black dark:text-white ${s.alert ? 'animate-bounce text-red-500' : ''}`}>{s.value}<span className="text-xl text-gray-300 ml-1 font-medium">{s.unit}</span></h3>
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-                            <div className="flex items-center gap-4">
-                                <div className="flex p-1.5 glass rounded-[2rem] shadow-inner overflow-x-auto no-scrollbar">
-                                    {['morning','class','reflect','heart','students'].map(t => (
-                                        <button key={t} onClick={()=>{setActiveTab(t); setSelectedIds([]);}} className={`px-8 py-3 rounded-3xl text-[10px] font-black transition-all whitespace-nowrap ${activeTab===t ? 'tab-active' : 'text-gray-400'}`}>
-                                            {t.toUpperCase()} {t==='heart'&&unreadHeart>0&&`(${unreadHeart})`}
-                                        </button>
-                                    ))}
-                                </div>
-                                {selectedIds.length > 0 && <button onClick={handleDelete} className="px-6 py-3 bg-red-500 text-white rounded-[2rem] font-black text-[10px] shadow-lg animate-in zoom-in">🗑️ {selectedIds.length}개 삭제</button>}
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <button onClick={downloadCSV} className="px-6 py-3 rounded-[2rem] bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 text-[10px] font-black border border-green-100 dark:border-green-900/30 hover:bg-green-500 hover:text-white transition-all">📥 데이터 내보내기</button>
-                                <div className="glass px-6 py-3 rounded-[2rem] flex items-center gap-4"><input type="date" value={selectedDate} onChange={e=>setSelectedDate(e.target.value)} className="bg-transparent font-black text-orange-500 outline-none cursor-pointer" /></div>
-                            </div>
-                        </div>
-
-                        <div className="bento-card border-none shadow-2xl">
-                            {loading ? <div className="p-32 text-center font-black text-gray-300 animate-pulse">SYNCHRONIZING...</div> : (
-                                <div className="p-4 md:p-8">
-                                    {activeTab === 'heart' ? (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                            {currentTabList.length === 0 ? <div className="col-span-full py-32 text-center font-black text-gray-200 text-5xl italic tracking-tighter uppercase">No Letters</div> : currentTabList.map(h => (
-                                                <div key={h.id} className={`p-8 rounded-[3rem] border-2 transition-all relative ${h.is_read ? 'bg-gray-50/50 dark:bg-white/5 border-transparent' : 'bg-white dark:bg-zinc-900 border-red-100 shadow-xl'}`}>
-                                                    <div className="flex justify-between items-start mb-6">
-                                                        <div className="flex items-center gap-3"><div className="w-12 h-12 bg-red-50 dark:bg-red-900/20 rounded-2xl flex items-center justify-center text-xl">❤️</div><div><p className="font-black dark:text-white">{h.user_name}</p><p className="text-[10px] font-bold text-gray-400">{new Date(h.created_at).toLocaleString()}</p></div></div>
-                                                        <input type="checkbox" checked={selectedIds.includes(h.id)} onChange={()=>toggleSelect(h.id)} className="w-6 h-6 rounded-xl accent-red-500 cursor-pointer" />
-                                                    </div>
-                                                    <p className="bg-gray-50 dark:bg-zinc-800 p-6 rounded-3xl mb-6 min-h-[100px] text-sm font-medium dark:text-gray-300">"{h.content}"</p>
-                                                    <div className="flex gap-3">
-                                                        {!h.is_read && <button onClick={async()=>{await supabaseClient.from('heart_on').update({is_read:true}).eq('id',h.id); fetchData();}} className="flex-1 py-4 bg-red-500 text-white rounded-2xl font-black text-xs shadow-lg">읽음 확인</button>}
-                                                        <button onClick={async()=>{if(confirm('삭제?')){await supabaseClient.from('heart_on').delete().eq('id',h.id); fetchData();}}} className="px-6 py-4 bg-gray-100 dark:bg-zinc-800 text-gray-400 rounded-2xl font-bold text-xs hover:bg-red-500 transition-colors">삭제</button>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <div className="overflow-x-auto">
-                                            {activeTab === 'students' && (
-                                                <div className="flex flex-wrap gap-4 p-8 bg-blue-50 dark:bg-blue-900/10 rounded-[3rem] items-end mb-10 border-4 border-white dark:border-zinc-800">
-                                                    <input type="number" placeholder="번호" value={newStudent.number} onChange={e=>setNewStudent({...newStudent, number:e.target.value})} className="w-20 p-4 rounded-2xl bg-white dark:bg-gray-800 font-bold outline-none" />
-                                                    <input type="text" placeholder="이름" value={newStudent.name} onChange={e=>setNewStudent({...newStudent, name:e.target.value})} className="w-32 p-4 rounded-2xl bg-white dark:bg-gray-800 font-bold outline-none" />
-                                                    <input type="password" placeholder="PIN" value={newStudent.pin} onChange={e=>setNewStudent({...newStudent, pin:e.target.value})} className="w-24 p-4 rounded-2xl bg-white dark:bg-gray-800 font-bold outline-none" />
-                                                    <button onClick={handleAddStudent} className="px-8 py-4 bg-blue-600 text-white rounded-2xl font-black text-xs">추가 👤+</button>
-                                                    <div className="h-12 w-px bg-gray-200 dark:bg-gray-700 mx-4"></div>
-                                                    <button onClick={() => fileInputRef.current.click()} className="px-8 py-4 bg-green-600 text-white rounded-2xl font-black text-xs">📂 일괄 등록</button>
-                                                    <input type="file" ref={fileInputRef} onChange={handleExcelUpload} className="hidden" accept=".xlsx,.xls,.csv" />
-                                                </div>
-                                            )}
-                                            <table className="w-full text-left">
-                                                <thead>
-                                                    <tr className="text-gray-400 text-[10px] font-black uppercase tracking-widest border-b dark:border-white/5">
-                                                        <th className="p-6 w-10"><input type="checkbox" onChange={()=>toggleSelectAll(currentTabList)} checked={currentTabList.length>0 && selectedIds.length===currentTabList.length} className="w-6 h-6 rounded-xl accent-orange-500 cursor-pointer" /></th>
-                                                        <th className="p-6">Time / No.</th><th className="p-6">Name</th>
-                                                        {activeTab==='morning' && <><th className="p-6">Temp</th><th className="p-6">Status</th><th className="p-6 text-center">Missions</th></>}
-                                                        {activeTab==='class' && <th className="p-6">Subject / Goal</th>}
-                                                        {activeTab==='reflect' && <><th className="p-6 text-center">Rating</th><th className="p-6">Content</th></>}
-                                                        {activeTab==='students' && <><th className="p-6 text-center">PIN SECURITY</th><th className="p-6 text-center">Registered</th></>}
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="divide-y dark:divide-white/5">
-                                                    {currentTabList.map(i => (
-                                                        <tr key={i.id} className={`group transition-all ${selectedIds.includes(i.id)?'bg-orange-50 dark:bg-orange-900/10':'hover:bg-gray-50/50 dark:hover:bg-white/5'}`}>
-                                                            <td className="p-6"><input type="checkbox" checked={selectedIds.includes(i.id)} onChange={()=>toggleSelect(i.id)} className="w-6 h-6 rounded-xl accent-orange-500 cursor-pointer" /></td>
-                                                            <td className="p-6 text-[10px] font-bold text-gray-400">{activeTab==='students' ? `${i.user_number}번` : new Date(i.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</td>
-                                                            <td className="p-6 font-black dark:text-white">{i.user_name}</td>
-                                                            {activeTab==='morning' && <>
-                                                                <td className="p-6 text-3xl">{['☁️','⛅','☀️','🌈','🔥'][i.temp-1]}</td>
-                                                                <td className="p-6"><span className={`px-3 py-1.5 rounded-full text-[10px] font-black shadow-sm ${i.temp<=1?'bg-red-500 text-white animate-pulse':'bg-green-500 text-white'}`}>{i.temp<=1?'상담요함':'정상상태'}</span></td>
-                                                                <td className="p-6 text-center"><div className="flex justify-center gap-1">{i.missions?.map((m,idx)=><span key={idx} className="w-6 h-6 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-500 flex items-center justify-center text-[10px] font-black border border-blue-100">✓</span>)}<span className="text-[10px] font-bold text-gray-300 ml-1">{i.missions?.length || 0}/3</span></div></td>
-                                                            </>}
-                                                            {activeTab==='class' && <td className="p-6 font-bold text-teal-600 text-sm">{i.period} {i.subject_name || i.subject} <span className="text-gray-300 font-normal text-[10px] ml-2 tracking-tight opacity-80">| 목표: {i.goal}</span></td>}
-                                                            {activeTab==='reflect' && <><td className="p-6 text-yellow-400 text-2xl text-center tracking-tighter">{'★'.repeat(i.rating)}</td><td className="p-6 text-sm font-medium text-gray-500 dark:text-gray-400 leading-relaxed"><span className="text-purple-500 font-black block text-[10px] mb-1">[{i.period || '-'} / {i.subject || '-'}]</span>"{i.content || i.reflection}"</td></>}
-                                                            {activeTab==='students' && <><td className="p-6 text-center text-gray-300 group-hover:text-blue-500 font-mono text-xl tracking-widest transition-all"><span className="group-hover:hidden">••••</span><span className="hidden group-hover:inline">{i.pin}</span></td><td className="p-6 text-[10px] text-gray-400 font-bold text-center">{new Date(i.created_at).toLocaleDateString()}</td></>}
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                            {currentTabList.length===0 && <div className="py-32 text-center font-black text-gray-200 dark:text-zinc-800 text-4xl italic tracking-tighter uppercase">No Records Found</div>}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    </main>
-                    <footer className="p-10 text-center text-[10px] font-black text-gray-300 dark:text-zinc-800 uppercase tracking-[0.5em]">© 2026 I-ON INSIGHT | PROFESSIONAL EDUCATION TOOL</footer>
-                </div>
-            );
+            // [학교 정보 및 기타]
+            "어디": "📍 경남 통영시 산양읍에 위치하고 있어! 산과 바다가 어우러진 공기 좋은 곳이야.",
+            "언제": "📅 보통 오전 8시 40분까지 등교해서 오후 4시쯤 학교가 끝나! 요일마다 조금씩 다르긴 해.",
+            "준비물": "🎒 입학할 때 실내화랑 가방, 필기구만 챙겨오면 돼! 교과서는 학교에서 다 나눠준단다.",
+            "입학": "🌸 내년 3월, 예쁜 꽃이 필 때 우리 산양중학교의 새 식구가 되는 거야! 기다리고 있을게.",
+            "알리미": "🌲 '산양알리미'는 우리 학교 소식을 폰으로 바로 볼 수 있는 앱이야! 지금 버튼 눌러서 구경해봐.",
+            "전화": "📞 더 궁금한 게 많으면 학교(055-643-6111)로 전화해도 좋지만, 산양알리미 질문 게시판에 남겨주면 더 좋아!",
+            "로봇": "🤖 나는 인공지능이지만 마음은 따뜻한 선배야! 너랑 대화해서 정말 즐거워.",
+            "심심해": "그럼 나랑 퀴즈 놀이할래? 아니면 우리 학교 동아리에 대해 더 물어봐줘! 🎸",
+            "고마워": "천만에! 나도 너랑 얘기할 수 있어서 행복했어. 내년에 꼭 만나자! 😊",
+            "사랑해": "어머! 나도 우리 예비 후배님 너무 사랑해~ ❤️ 내년에 꼭 학교에서 인사하자!"
         };
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        sendBtn.addEventListener('click', sendMessage);
+
+        function showHelp() {
+            const helpText = "🌟 **산양 선배에게 이런 걸 물어봐!** 🌟\n\n" +
+                             "🍱 **먹거리:** 급식 맛있어? 매점 있어? 오늘의 메뉴 뭐야?\n" +
+                             "⛳ **학교시설:** 골프 연습장 있어? 체육관 좋아? 화장실 깨끗해?\n" +
+                             "🚌 **특별혜택:** 수학여행 공짜야? 버스비 100원 진짜야?\n" +
+                             "👗 **복장규정:** 교복 예뻐? 사복 입는 날 있어? 화장해도 돼?\n" +
+                             "🐱 **동아리:** 고양이 동아리 뭐야? 동아리 뭐 있어?\n" +
+                             "📝 **공부/시험:** 시험 어려워? 숙제 많아? 자유학기제 뭐야?\n" +
+                             "👫 **학교생활:** 선생님 무서워? 친구 사귈 수 있어?\n\n" +
+                             "키워드만 넣어서 짧게 물어봐도 다 대답해줄게! 😊";
+            addMessage("어떤 게 궁금하니? 도움말을 보여줄게!", 'user');
+            setTimeout(() => {
+                addMessage(helpText, 'bot');
+            }, 600);
+        }
+
+        function quickAsk(text) {
+            userInput.value = text;
+            sendMessage();
+        }
+
+        function addMessage(text, sender) {
+            const div = document.createElement('div');
+            div.className = `message ${sender}`;
+            div.innerText = text;
+            chatWindow.appendChild(div);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            addMessage(message, 'user');
+            userInput.value = '';
+
+            setTimeout(() => {
+                let reply = "";
+                // 모든 키워드 검사 (부분 일치 포함)
+                for (const key in responses) {
+                    if (message.includes(key)) {
+                        reply = responses[key];
+                        break;
+                    }
+                }
+
+                if (!reply) {
+                    reply = "앗, 그건 내가 아직 잘 모르는 내용이야... 😅 하지만 '산양알리미' 앱의 질문 게시판에 남겨주면 선배들이나 선생님들이 대답해주실 거야! 아니면 내년에 우리 산양중학교에 꼭 와서 나한테 직접 물어봐줘! 기다리고 있을게~ 🌲✨";
+                }
+                addMessage(reply, 'bot');
+            }, 600);
+        }
     </script>
 </body>
 </html>
