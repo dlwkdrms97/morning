@@ -245,7 +245,10 @@
 
             setTimeout(() => {
                 let reply = "";
-                for (const key in responses) {
+                // 키워드 길이가 긴 순서대로 정렬하여 더 구체적인 질문에 우선 순위를 둡니다.
+                const sortedKeys = Object.keys(responses).sort((a, b) => b.length - a.length);
+                
+                for (const key of sortedKeys) {
                     if (message.includes(key)) {
                         reply = responses[key];
                         break;
